@@ -17,10 +17,6 @@ import { readClaudeConfig, writeClaudeConfig } from "./utils/config";
 import AddMcpServerForm from "./components/AddMcpServerForm";
 import EditMcpServerForm from "./components/EditMcpServerForm";
 
-interface Preferences {
-  configPath: string;
-}
-
 export default function Command() {
   const [servers, setServers] = useState<Record<string, McpServerConfig>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -158,13 +154,7 @@ export default function Command() {
                       icon={Icon.Pencil}
                       shortcut={{ modifiers: ["cmd"], key: "e" }}
                       onAction={() =>
-                        push(
-                          <EditMcpServerForm
-                            serverName={name}
-                            config={config}
-                            onUpdate={loadServers}
-                          />
-                        )
+                        push(<EditMcpServerForm serverName={name} config={config} onUpdate={loadServers} />)
                       }
                     />
                   </ActionPanel.Section>

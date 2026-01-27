@@ -10,6 +10,14 @@ const CC_SWITCH_DB_PATH = path.join(os.homedir(), ".cc-switch", "cc-switch.db");
 const APP_TYPE = "claude";
 
 /**
+ * Escape a string value for safe use in SQLite queries
+ * SQLite strings use single quotes, so we escape single quotes by doubling them
+ */
+function escapeSqlValue(value: string): string {
+  return value.replace(/'/g, "''");
+}
+
+/**
  * Execute SQLite query
  */
 async function executeSqlite(query: string, outputJson = true): Promise<string> {
@@ -44,7 +52,7 @@ export async function getProfiles(): Promise<Profile[]> {
   }
 
   try {
-    const query = `SELECT id, name, settings_config, is_current, notes, created_at, sort_index FROM providers WHERE app_type='${APP_TYPE}' ORDER BY sort_index, name`;
+    const query = `SELECT id, name, settings_config, is_current, notes, created_at, sort_index FROM providers WHERE app_type='${escapeSqlValue(APP_TYPE)}' ORDER BY sort_index, name`;
     const result = await executeSqlite(query);
 
     if (!result.trim()) {
@@ -60,11 +68,7 @@ export async function getProfiles(): Promise<Profile[]> {
           try {
             const config = JSON.parse(row.settings_config);
             const keys = Object.keys(config);
-            if (
-              keys.length <= 2 &&
-              keys.includes("model") &&
-              keys.includes("includeCoAuthoredBy")
-            ) {
+            if (keys.length <= 2 && keys.includes("model") && keys.includes("includeCoAuthoredBy")) {
               return false;
             }
           } catch {
@@ -75,9 +79,7 @@ export async function getProfiles(): Promise<Profile[]> {
       })
       .map((row: CCProviderRow) => {
         const config = JSON.parse(row.settings_config);
-        const createdAt = row.created_at
-          ? new Date(row.created_at).toISOString()
-          : new Date().toISOString();
+        const createdAt = row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString();
 
         return {
           id: row.id,
@@ -121,9 +123,7 @@ export async function getActiveProfileId(): Promise<string | undefined> {
 /**
  * Create a new profile in CC Switch database
  */
-export async function createProfile(
-  profileData: Omit<Profile, "id" | "createdAt" | "updatedAt">
-): Promise<Profile> {
+export async function createProfile(profileData: Omit<Profile, "id" | "createdAt" | "updatedAt">): Promise<Profile> {
   const exists = await ccSwitchDatabaseExists();
   if (!exists) {
     throw new Error("CC Switch database not found. Please install and run CC Switch first.");
@@ -134,12 +134,7 @@ export async function createProfile(
   const settingsConfig = JSON.stringify(profileData.config);
   const notes = profileData.description || "";
 
-  // Escape single quotes for SQL
-  const escapedName = profileData.name.replace(/'/g, "''");
-  const escapedNotes = notes.replace(/'/g, "''");
-  const escapedConfig = settingsConfig.replace(/'/g, "''");
-
-  const query = `INSERT INTO providers (id, app_type, name, settings_config, notes, created_at, sort_index, is_current, in_failover_queue, meta) VALUES ('${id}', '${APP_TYPE}', '${escapedName}', '${escapedConfig}', '${escapedNotes}', ${now}, 999, 0, 0, '{}')`;
+  const query = `INSERT INTO providers (id, app_type, name, settings_config, notes, created_at, sort_index, is_current, in_failover_queue, meta) VALUES ('${id}', '${escapeSqlValue(APP_TYPE)}', '${escapeSqlValue(profileData.name)}', '${escapeSqlValue(settingsConfig)}', '${escapeSqlValue(notes)}', ${now}, 999, 0, 0, '{}')`;
 
   try {
     await executeSqlite(query, false);
@@ -161,10 +156,7 @@ export async function createProfile(
 /**
  * Update an existing profile
  */
-export async function updateProfile(
-  id: string,
-  updates: Partial<Omit<Profile, "id" | "createdAt">>
-): Promise<Profile> {
+export async function updateProfile(id: string, updates: Partial<Omit<Profile, "id" | "createdAt">>): Promise<Profile> {
   const exists = await ccSwitchDatabaseExists();
   if (!exists) {
     throw new Error("CC Switch database not found");
@@ -182,11 +174,7 @@ export async function updateProfile(
   };
 
   const settingsConfig = JSON.stringify(updated.config);
-  const escapedName = updated.name.replace(/'/g, "''");
-  const escapedNotes = (updated.description || "").replace(/'/g, "''");
-  const escapedConfig = settingsConfig.replace(/'/g, "''");
-
-  const query = `UPDATE providers SET name='${escapedName}', settings_config='${escapedConfig}', notes='${escapedNotes}' WHERE id='${id}' AND app_type='${APP_TYPE}'`;
+  const query = `UPDATE providers SET name='${escapeSqlValue(updated.name)}', settings_config='${escapeSqlValue(settingsConfig)}', notes='${escapeSqlValue(updated.description || "")}' WHERE id='${id}' AND app_type='${escapeSqlValue(APP_TYPE)}'`;
 
   try {
     await executeSqlite(query, false);
@@ -205,7 +193,7 @@ export async function deleteProfile(id: string): Promise<void> {
     throw new Error("CC Switch database not found");
   }
 
-  const query = `DELETE FROM providers WHERE id='${id}' AND app_type='${APP_TYPE}'`;
+  const query = `DELETE FROM providers WHERE id='${id}' AND app_type='${escapeSqlValue(APP_TYPE)}'`;
 
   try {
     await executeSqlite(query, false);
@@ -225,12 +213,12 @@ export async function setActiveProfileId(id: string | undefined): Promise<void> 
 
   try {
     // First, deactivate all profiles
-    await executeSqlite(`UPDATE providers SET is_current=0 WHERE app_type='${APP_TYPE}'`, false);
+    await executeSqlite(`UPDATE providers SET is_current=0 WHERE app_type='${escapeSqlValue(APP_TYPE)}'`, false);
 
     // Then activate the selected one
     if (id) {
       await executeSqlite(
-        `UPDATE providers SET is_current=1 WHERE id='${id}' AND app_type='${APP_TYPE}'`,
+        `UPDATE providers SET is_current=1 WHERE id='${id}' AND app_type='${escapeSqlValue(APP_TYPE)}'`,
         false
       );
     }

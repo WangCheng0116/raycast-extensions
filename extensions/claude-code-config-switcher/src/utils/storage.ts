@@ -41,9 +41,7 @@ async function saveProfiles(profiles: Profile[]): Promise<void> {
 /**
  * Create a new profile
  */
-export async function createProfile(
-  profile: Omit<Profile, "id" | "createdAt" | "updatedAt">
-): Promise<Profile> {
+export async function createProfile(profile: Omit<Profile, "id" | "createdAt" | "updatedAt">): Promise<Profile> {
   const profiles = await getProfiles();
 
   const newProfile: Profile = {
@@ -62,10 +60,7 @@ export async function createProfile(
 /**
  * Update an existing profile
  */
-export async function updateProfile(
-  id: string,
-  updates: Partial<Omit<Profile, "id" | "createdAt">>
-): Promise<Profile> {
+export async function updateProfile(id: string, updates: Partial<Omit<Profile, "id" | "createdAt">>): Promise<Profile> {
   const profiles = await getProfiles();
   const index = profiles.findIndex((p) => p.id === id);
 

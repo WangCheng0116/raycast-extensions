@@ -1,20 +1,7 @@
-import {
-  Form,
-  ActionPanel,
-  Action,
-  showToast,
-  Toast,
-  useNavigation,
-  Icon,
-  getPreferenceValues,
-} from "@raycast/api";
+import { Form, ActionPanel, Action, showToast, Toast, useNavigation, Icon, getPreferenceValues } from "@raycast/api";
 import React, { useState } from "react";
 import { McpServerConfig } from "../types";
 import { readClaudeConfig, writeClaudeConfig } from "../utils/config";
-
-interface Preferences {
-  configPath: string;
-}
 
 interface EditMcpServerFormProps {
   serverName: string;
@@ -22,11 +9,7 @@ interface EditMcpServerFormProps {
   onUpdate: () => void;
 }
 
-export default function EditMcpServerForm({
-  serverName,
-  config,
-  onUpdate,
-}: EditMcpServerFormProps) {
+export default function EditMcpServerForm({ serverName, config, onUpdate }: EditMcpServerFormProps) {
   const { pop } = useNavigation();
   const preferences = getPreferenceValues<Preferences>();
   const [commandError, setCommandError] = useState<string | undefined>();
@@ -115,11 +98,7 @@ export default function EditMcpServerForm({
       }
     >
       <Form.Description text={`Editing: ${serverName}`} />
-      <Form.Dropdown
-        id="transportType"
-        title="Transport Type"
-        defaultValue={config.transportType || "stdio"}
-      >
+      <Form.Dropdown id="transportType" title="Transport Type" defaultValue={config.transportType || "stdio"}>
         <Form.Dropdown.Item value="stdio" title="STDIO" />
         <Form.Dropdown.Item value="http" title="HTTP" />
         <Form.Dropdown.Item value="sse" title="SSE" />
@@ -150,12 +129,7 @@ export default function EditMcpServerForm({
         placeholder="KEY=value (one per line)&#10;API_KEY=sk-...&#10;DEBUG=true"
         defaultValue={envText}
       />
-      <Form.Checkbox
-        id="disabled"
-        title="Status"
-        label="Disabled"
-        defaultValue={config.disabled || false}
-      />
+      <Form.Checkbox id="disabled" title="Status" label="Disabled" defaultValue={config.disabled || false} />
     </Form>
   );
 }

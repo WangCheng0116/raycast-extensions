@@ -77,11 +77,7 @@ export default function Command() {
               key={profile.id}
               title={profile.name}
               subtitle={profile.description || "No description"}
-              accessories={[
-                isActive
-                  ? { tag: { value: "Active", color: Color.Green }, icon: Icon.CheckCircle }
-                  : {},
-              ]}
+              accessories={[isActive ? { tag: { value: "Active", color: Color.Green }, icon: Icon.CheckCircle } : {}]}
               icon={{
                 source: Icon.Person,
                 tintColor: isActive ? Color.Green : Color.SecondaryText,

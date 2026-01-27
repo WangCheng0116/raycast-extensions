@@ -67,10 +67,7 @@ export async function readClaudeConfig(configPath?: string): Promise<ClaudeCodeC
 /**
  * Write Claude Code configuration file
  */
-export async function writeClaudeConfig(
-  config: ClaudeCodeConfig,
-  configPath?: string
-): Promise<void> {
+export async function writeClaudeConfig(config: ClaudeCodeConfig, configPath?: string): Promise<void> {
   const filePath = expandPath(configPath || getDefaultConfigPath());
   const dirPath = path.dirname(filePath);
 

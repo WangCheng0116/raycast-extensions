@@ -12,12 +12,7 @@ import {
 } from "@raycast/api";
 import React, { useEffect, useState } from "react";
 import { Profile } from "./types";
-import {
-  getProfiles,
-  deleteProfile,
-  getActiveProfileId,
-  ccSwitchDatabaseExists,
-} from "./utils/cc-switch-db";
+import { getProfiles, deleteProfile, getActiveProfileId, ccSwitchDatabaseExists } from "./utils/cc-switch-db";
 import { switchToProfile } from "./utils/profile-switcher";
 import CreateProfileForm from "./components/CreateProfileForm";
 import EditProfileForm from "./components/EditProfileForm";
@@ -130,9 +125,7 @@ export default function Command() {
                   title={profile.name}
                   subtitle={profile.description || "No description"}
                   accessories={[
-                    isActive
-                      ? { tag: { value: "Active", color: Color.Green }, icon: Icon.CheckCircle }
-                      : {},
+                    isActive ? { tag: { value: "Active", color: Color.Green }, icon: Icon.CheckCircle } : {},
                     { date: new Date(profile.updatedAt), tooltip: "Last updated" },
                   ]}
                   icon={{
@@ -153,9 +146,7 @@ export default function Command() {
                           title="Edit Profile"
                           icon={Icon.Pencil}
                           shortcut={{ modifiers: ["cmd"], key: "e" }}
-                          onAction={() =>
-                            push(<EditProfileForm profile={profile} onUpdate={loadProfiles} />)
-                          }
+                          onAction={() => push(<EditProfileForm profile={profile} onUpdate={loadProfiles} />)}
                         />
                         <Action
                           title="Duplicate Profile"

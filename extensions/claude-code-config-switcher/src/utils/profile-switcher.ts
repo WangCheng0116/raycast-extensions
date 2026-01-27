@@ -3,12 +3,6 @@ import { Profile, ClaudeCodeConfig } from "../types";
 import { readClaudeConfig, writeClaudeConfig, backupClaudeConfig } from "./config";
 import { setActiveProfileId } from "./cc-switch-db";
 
-interface Preferences {
-  configPath: string;
-  autoBackup: boolean;
-  confirmSwitch: boolean;
-}
-
 /**
  * Switch to a different profile
  */

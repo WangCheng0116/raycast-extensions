@@ -1,19 +1,6 @@
-import {
-  Form,
-  ActionPanel,
-  Action,
-  showToast,
-  Toast,
-  useNavigation,
-  Icon,
-  getPreferenceValues,
-} from "@raycast/api";
+import { Form, ActionPanel, Action, showToast, Toast, useNavigation, Icon, getPreferenceValues } from "@raycast/api";
 import React, { useState } from "react";
 import { readClaudeConfig, writeClaudeConfig } from "../utils/config";
-
-interface Preferences {
-  configPath: string;
-}
 
 interface AddMcpServerFormProps {
   onSuccess: () => void;
@@ -136,11 +123,7 @@ export default function AddMcpServerForm({ onSuccess }: AddMcpServerFormProps) {
         title="Arguments"
         placeholder="One argument per line&#10;/path/to/server.js&#10;--port=3000"
       />
-      <Form.TextArea
-        id="url"
-        title="URL"
-        placeholder="http://localhost:3000 (for HTTP/SSE transport)"
-      />
+      <Form.TextArea id="url" title="URL" placeholder="http://localhost:3000 (for HTTP/SSE transport)" />
       <Form.TextArea
         id="env"
         title="Environment Variables"

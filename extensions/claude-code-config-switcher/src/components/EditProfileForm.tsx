@@ -76,17 +76,8 @@ export default function EditProfileForm({ profile, onUpdate }: EditProfileFormPr
         defaultValue={profile.description}
       />
       <Form.Separator />
-      <Form.TextField
-        id="apiKey"
-        title="API Key"
-        placeholder="sk-ant-..."
-        defaultValue={profile.config.apiKey}
-      />
-      <Form.Dropdown
-        id="model"
-        title="Model"
-        defaultValue={profile.config.model || "claude-sonnet-4-5-20250929"}
-      >
+      <Form.TextField id="apiKey" title="API Key" placeholder="sk-ant-..." defaultValue={profile.config.apiKey} />
+      <Form.Dropdown id="model" title="Model" defaultValue={profile.config.model || "claude-sonnet-4-5-20250929"}>
         <Form.Dropdown.Item value="claude-sonnet-4-5-20250929" title="Claude Sonnet 4.5" />
         <Form.Dropdown.Item value="claude-opus-4-5-20251101" title="Claude Opus 4.5" />
         <Form.Dropdown.Item value="claude-3-5-sonnet-20241022" title="Claude 3.5 Sonnet" />

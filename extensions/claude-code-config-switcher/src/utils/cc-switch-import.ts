@@ -54,17 +54,14 @@ export async function getCCSwitchProfiles(): Promise<CCProviderData[]> {
 /**
  * Convert CC Switch provider to Raycast profile format
  */
-export function convertCCSwitchToProfile(
-  provider: CCProviderData
-): Omit<Profile, "id" | "createdAt" | "updatedAt"> {
+export function convertCCSwitchToProfile(provider: CCProviderData): Omit<Profile, "id" | "createdAt" | "updatedAt"> {
   const config: ClaudeCodeConfig = {
     ...provider.settings_config,
   };
 
   return {
     name: provider.name,
-    description:
-      provider.notes || `Imported from CC Switch${provider.is_current ? " (was active)" : ""}`,
+    description: provider.notes || `Imported from CC Switch${provider.is_current ? " (was active)" : ""}`,
     config,
   };
 }
@@ -80,9 +77,7 @@ export async function getCCSwitchActiveProfile(): Promise<CCProviderData | null>
 /**
  * Import all profiles from CC Switch
  */
-export async function importAllFromCCSwitch(): Promise<
-  Array<Omit<Profile, "id" | "createdAt" | "updatedAt">>
-> {
+export async function importAllFromCCSwitch(): Promise<Array<Omit<Profile, "id" | "createdAt" | "updatedAt">>> {
   const providers = await getCCSwitchProfiles();
 
   // Filter out the default provider if it has no custom config
