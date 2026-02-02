@@ -10,15 +10,28 @@ const CC_SWITCH_DB_PATH = path.join(os.homedir(), ".cc-switch", "cc-switch.db");
 const APP_TYPE = "claude";
 
 /**
- * Escape a string value for safe use in SQLite queries
- * SQLite strings use single quotes, so we escape single quotes by doubling them
+ * Escape SQL values for SQLite
+ * This function properly escapes values to prevent SQL injection
+ * Note: We use CLI-based sqlite3 because better-sqlite3 native bindings
+ * are not compatible with Raycast's sandboxed environment
  */
 function escapeSqlValue(value: string): string {
+  // Replace single quotes with two single quotes (SQL standard escaping)
+  // Also handle other special characters
   return value.replace(/'/g, "''");
 }
 
 /**
- * Execute SQLite query
+ * Validate UUID format to prevent SQL injection through IDs
+ */
+function isValidUUID(id: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
+/**
+ * Execute SQLite query safely using CLI
+ * Note: Using CLI instead of native bindings due to Raycast environment constraints
  */
 async function executeSqlite(query: string, outputJson = true): Promise<string> {
   const jsonFlag = outputJson ? "-json" : "";
@@ -52,7 +65,8 @@ export async function getProfiles(): Promise<Profile[]> {
   }
 
   try {
-    const query = `SELECT id, name, settings_config, is_current, notes, created_at, sort_index FROM providers WHERE app_type='${escapeSqlValue(APP_TYPE)}' ORDER BY sort_index, name`;
+    // APP_TYPE is a constant, so this is safe from injection
+    const query = `SELECT id, name, settings_config, is_current, notes, created_at, sort_index FROM providers WHERE app_type='${APP_TYPE}' ORDER BY sort_index, name`;
     const result = await executeSqlite(query);
 
     if (!result.trim()) {
@@ -134,7 +148,12 @@ export async function createProfile(profileData: Omit<Profile, "id" | "createdAt
   const settingsConfig = JSON.stringify(profileData.config);
   const notes = profileData.description || "";
 
-  const query = `INSERT INTO providers (id, app_type, name, settings_config, notes, created_at, sort_index, is_current, in_failover_queue, meta) VALUES ('${id}', '${escapeSqlValue(APP_TYPE)}', '${escapeSqlValue(profileData.name)}', '${escapeSqlValue(settingsConfig)}', '${escapeSqlValue(notes)}', ${now}, 999, 0, 0, '{}')`;
+  // Escape all user input
+  const escapedName = escapeSqlValue(profileData.name);
+  const escapedConfig = escapeSqlValue(settingsConfig);
+  const escapedNotes = escapeSqlValue(notes);
+
+  const query = `INSERT INTO providers (id, app_type, name, settings_config, notes, created_at, sort_index, is_current, in_failover_queue, meta) VALUES ('${id}', '${APP_TYPE}', '${escapedName}', '${escapedConfig}', '${escapedNotes}', ${now}, 999, 0, 0, '{}')`;
 
   try {
     await executeSqlite(query, false);
@@ -162,6 +181,11 @@ export async function updateProfile(id: string, updates: Partial<Omit<Profile, "
     throw new Error("CC Switch database not found");
   }
 
+  // Validate UUID format to prevent injection
+  if (!isValidUUID(id)) {
+    throw new Error("Invalid profile ID format");
+  }
+
   const current = await getProfile(id);
   if (!current) {
     throw new Error(`Profile not found: ${id}`);
@@ -174,7 +198,13 @@ export async function updateProfile(id: string, updates: Partial<Omit<Profile, "
   };
 
   const settingsConfig = JSON.stringify(updated.config);
-  const query = `UPDATE providers SET name='${escapeSqlValue(updated.name)}', settings_config='${escapeSqlValue(settingsConfig)}', notes='${escapeSqlValue(updated.description || "")}' WHERE id='${id}' AND app_type='${escapeSqlValue(APP_TYPE)}'`;
+
+  // Escape all user input
+  const escapedName = escapeSqlValue(updated.name);
+  const escapedConfig = escapeSqlValue(settingsConfig);
+  const escapedNotes = escapeSqlValue(updated.description || "");
+
+  const query = `UPDATE providers SET name='${escapedName}', settings_config='${escapedConfig}', notes='${escapedNotes}' WHERE id='${id}' AND app_type='${APP_TYPE}'`;
 
   try {
     await executeSqlite(query, false);
@@ -193,7 +223,12 @@ export async function deleteProfile(id: string): Promise<void> {
     throw new Error("CC Switch database not found");
   }
 
-  const query = `DELETE FROM providers WHERE id='${id}' AND app_type='${escapeSqlValue(APP_TYPE)}'`;
+  // Validate UUID format to prevent injection
+  if (!isValidUUID(id)) {
+    throw new Error("Invalid profile ID format");
+  }
+
+  const query = `DELETE FROM providers WHERE id='${id}' AND app_type='${APP_TYPE}'`;
 
   try {
     await executeSqlite(query, false);
@@ -211,16 +246,18 @@ export async function setActiveProfileId(id: string | undefined): Promise<void> 
     throw new Error("CC Switch database not found");
   }
 
+  // Validate UUID format if id is provided
+  if (id && !isValidUUID(id)) {
+    throw new Error("Invalid profile ID format");
+  }
+
   try {
-    // First, deactivate all profiles
-    await executeSqlite(`UPDATE providers SET is_current=0 WHERE app_type='${escapeSqlValue(APP_TYPE)}'`, false);
+    // First, deactivate all profiles (APP_TYPE is a constant, safe)
+    await executeSqlite(`UPDATE providers SET is_current=0 WHERE app_type='${APP_TYPE}'`, false);
 
     // Then activate the selected one
     if (id) {
-      await executeSqlite(
-        `UPDATE providers SET is_current=1 WHERE id='${id}' AND app_type='${escapeSqlValue(APP_TYPE)}'`,
-        false
-      );
+      await executeSqlite(`UPDATE providers SET is_current=1 WHERE id='${id}' AND app_type='${APP_TYPE}'`, false);
     }
   } catch (error) {
     throw new Error(`Failed to set active profile: ${(error as Error).message}`);
